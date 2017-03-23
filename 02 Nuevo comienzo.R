@@ -12,8 +12,10 @@ library(ggplot2)
 library(FactoMineR)
 library(funModeling)
 library(aplpack)
-
-
+library(partykit)				# Convert rpart object to BinaryTree
+library(party)	
+library(rpart.plot)
+library(rattle)					# Fancy tree plot
 
 ---#revision de datos----
 
@@ -126,10 +128,10 @@ write.table(rules_subset,"reglas_no_surv.txt")
 
 ----#train-----
 
-train <- combi[1:891,]
-test <- combi[892:1309,]
+train <- combi[1:891,-4]
+test <- combi[892:1309,-4]
 
-fit.rpart <- rpart(Survived ~ .,data = train,control = rpart.control(cp = 0.05),type = "prob")
+fit.rpart <- rpart(Survived ~ .,data = train,control = rpart.control(cp = 0.05,minsplit = 50))
 
 
 summary(fit.rpart)
@@ -138,3 +140,6 @@ caret::varImp(fit.rpart)
 
 plot(fit.rpart)
 text(fit.rpart)
+
+
+fancyRpartPlot(fit.rpart)				# A fancy plot from rattle
