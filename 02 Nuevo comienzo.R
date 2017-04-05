@@ -128,10 +128,21 @@ write.table(rules_subset,"reglas_no_surv.txt")
 
 ----#train-----
 
-train <- combi[1:891,-4]
-test <- combi[892:1309,-4]
+#remuevo los nombres de la gente
 
-fit.rpart <- rpart(Survived ~ .,data = train,control = rpart.control(cp = 0.05,minsplit = 50))
+set_modif <- combi
+
+row.names(set_modif) <- combi$PassengerId
+
+my_data_status <- df_status(set_modif)
+
+set_modif <- set_modif %>% select(Survived,Pclass,Sex,Age,SibSp,Parch,Ticket,Fare,Embarked,Title,FamilySize,FamilyID,FamilyID2,ZFare,ZAge,cabin_letter)
+set_modif$FamilyID <- as.factor(set_modif$FamilyID)
+
+train <- set_modif[1:891,]
+test <- set_modif[892:1309,]
+
+fit.rpart <- rpart(Survived ~ .,data = train[,-7],control = rpart.control(cp = 0.05,minsplit = 50,maxsurrogate = 0))
 
 
 summary(fit.rpart)
@@ -143,3 +154,23 @@ text(fit.rpart)
 
 
 fancyRpartPlot(fit.rpart)				# A fancy plot from rattle
+
+pred.rpart <- predict(fit.rpart,test,type="prob")
+
+df_pred <-  as.data.frame(pred.rpart)
+
+colnames(df_pred) <- c("no","si")
+
+lista <- df_pred %>% mutate(id=row.names(df_pred),Survived=ifelse((si>0.7),1,0)) %>% select(id,Survived)
+
+colnames(lista) <- c("PassengerId","Survived")
+
+lista$PassengerId <- as.integer(lista$PassengerId)
+
+write.table(lista,file = "/Users/pablotempone/OneDrive/Titanic predicciones/set_1_rpart.csv",row.names = FALSE,sep = ",")
+
+----#random forest----
+
+library(randomForest)
+
+fit.rf <- randomForest()
